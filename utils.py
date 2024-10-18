@@ -128,14 +128,16 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""
     使用以下資料生中文及英文宣傳文宣，先是中文，後面才是英文：
-    要包含以下內容
+    要包含以下內容: 
     主辦單位: {organizer}
     活動時間: {time}
     活動地點: {location}
     活動名稱: {event_name}
     活動內容: {description}
     費用: {fee}
-    以及一個有趣的笑話，才能吸引大家參加
+    如果費用為零，請強調活動完全免費，
+    強調大家可以學到或體驗到什麼東西，
+    以及一個相關的有趣的笑話，才能吸引大家參加，
     生成後輸出文案。
     """
     response = model.generate_content(prompt)

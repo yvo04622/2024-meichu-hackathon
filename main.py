@@ -116,28 +116,29 @@ def handle_text_message(event):
         fdb.delete(user_state_path, None)
         reply_msg = "已清空對話紀錄"
     elif text.startswith("\\slogan"):
-        parts = text.split(' ', 5) 
+        parts = text.split(' ', 6) 
 
-        if len(parts) < 6:
+        if len(parts) < 7:
             reply_msg = "輸入不完整，請依次輸入：\\poster 主辦單位 時間 地點 活動名稱 活動內容"
         else:
-            _, organizer, time, location, event_name, description = parts
+            _, organizer, time, location, event_name, description, fee = parts
             fdb.put_async(user_chat_path, 'organizer', organizer)
             fdb.put_async(user_chat_path, 'time', time)
             fdb.put_async(user_chat_path, 'location', location)
             fdb.put_async(user_chat_path, 'event_name', event_name)
             fdb.put_async(user_chat_path, 'description', description)
+            fdb.put_async(user_chat_path, 'fee', fee)
 
             location = replace_location_with_abbrev(location)
 
-            reply_msg = "開始生成海報與文宣，請稍等..."
+            reply_msg = "開始文宣，請稍等..."
 
-            event_poster, event_text = generate_promotion_data(organizer, time, location, event_name, description)
+            event_text = generate_promotion_data(organizer, time, location, event_name, description)
 
-            reply_msg = f"活動海報: {event_poster}\n文宣內容: {event_text}"
+            reply_msg = f"文宣內容: {event_text}"
 
     else:
-        reply_msg = "請輸入有效命令，例如：\\poster 主辦單位 時間 地點 活動名稱 活動內容"
+        reply_msg = "請輸入有效命令，例如：\\poster 主辦單位 時間 地點 活動名稱 活動內容 費用"
 
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)

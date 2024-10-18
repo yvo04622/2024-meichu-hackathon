@@ -139,6 +139,5 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     生成後輸出文案。
     """
     response = model.generate_content(prompt)
-    return response.text
-     
+    return response.text  
 

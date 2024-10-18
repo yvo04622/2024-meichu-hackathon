@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import sys
-from utils import replace_location_with_abbrev, generate_poster_and_promotion_data
+from utils import replace_location_with_abbrev, generate_promotion_data
 
 if os.getenv("API_ENV") != "production":
     from dotenv import load_dotenv
@@ -132,7 +132,7 @@ def handle_text_message(event):
 
             reply_msg = "開始生成海報與文宣，請稍等..."
 
-            event_poster, event_text = generate_poster_and_promotion_data(organizer, time, location, event_name, description)
+            event_poster, event_text = generate_promotion_data(organizer, time, location, event_name, description)
 
             reply_msg = f"活動海報: {event_poster}\n文宣內容: {event_text}"
 

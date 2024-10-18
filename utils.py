@@ -9,7 +9,7 @@ from io import BytesIO
 import urllib
 import google.generativeai as genai
 
-campus_json = json.load("campus.json")
+campus_json = json.load(open("campus.json"))
 
 logger = logging.getLogger(__file__)
 

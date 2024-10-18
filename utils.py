@@ -147,6 +147,7 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     #response = model.generate_content(prompt)
     #return response.text
     response = model.generate_content(prompt)
+    print("Response from the model:", response)
     poster_url = response['image_url']
     event_poster = poster_url
     return event_poster, response.text

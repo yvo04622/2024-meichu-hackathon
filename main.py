@@ -104,7 +104,7 @@ def handle_text_message(event):
     user_state_path = f"state/{user_id}"
 
     conversation_data = fdb.get(user_chat_path, None)
-    user_state = fdb.get(user_state_path, None)
+    #user_state = fdb.get(user_state_path, None)
 
     if conversation_data is None:
         messages = []
@@ -115,7 +115,7 @@ def handle_text_message(event):
         fdb.delete(user_chat_path, None)
         fdb.delete(user_state_path, None)
         reply_msg = "已清空對話紀錄"
-    elif text.startswith("\\poster"):
+    elif text.startswith("\\slogan"):
         parts = text.split(' ', 5) 
 
         if len(parts) < 6:
@@ -141,37 +141,14 @@ def handle_text_message(event):
 
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message
-
-
-
-@handler.add(MessageEvent, message=ImageMessageContent)
-def handle_github_message(event):
-    image_content = b""
-    with ApiClient(configuration) as api_client:
-        line_bot_blob_api = MessagingApiBlob(api_client)
-        image_content = line_bot_blob_api.get_message_content(event.message.id)
-    image_data = check_image(b_image=image_content)
-    image_data = json.loads(image_data)
-    logger.info("---- Image handler JSON ----")
-    logger.info(image_data)
-    g_url = create_gcal_url(
-        image_data["title"],
-        image_data["time"],
-        image_data["location"],
-        image_data["content"],
-    )
-    reply_msg = shorten_url_by_reurl_api(g_url)
-
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
         line_bot_api.reply_message(
             ReplyMessageRequest(
-                replyToken=event.reply_token, messages=[TextMessage(text=reply_msg)]
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=reply_msg)],
             )
         )
-    return "OK"
 
+    return "OK"
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", default=8080))

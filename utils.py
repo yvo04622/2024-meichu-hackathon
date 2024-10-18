@@ -125,7 +125,8 @@ def replace_location_with_abbrev(input_text):
     return input_text
 
 def generate_promotion_data(organizer, time, location, event_name, description, fee):
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    #model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-1.5-pro")
     prompt = f"""
     使用以下資料生中文及英文宣傳文宣，先是中文，後面才是英文：
     要包含以下內容: 
@@ -135,11 +136,18 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     活動名稱: {event_name}
     活動內容: {description}
     費用: {fee}
+    文案的部分，
     如果費用為零，請強調活動完全免費，
     強調大家可以學到或體驗到什麼東西，
     以及一個相關的有趣的笑話，才能吸引大家參加，
-    生成後輸出文案。
+    海報的部分，
+    希望能是符合活動特質的海報，像是啦啦隊海報要有活力，咖啡社海報要溫馨。
+    生成後輸出海報及文案。
     """
+    #response = model.generate_content(prompt)
+    #return response.text
     response = model.generate_content(prompt)
-    return response.text  
+    poster_url = response['image_url']
+    event_poster = poster_url
+    return event_poster, response.text
 

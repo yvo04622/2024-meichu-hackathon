@@ -146,7 +146,7 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     生成後輸出海報及文案。
     """
     result = imagen.generate_images(
-    prompt="""使用以下資料生中文及英文宣傳海報，先是中文，後面才是英文：
+    prompt2="""使用以下資料生中文及英文宣傳海報，先是中文，後面才是英文：
     要包含以下內容: 
     主辦單位: {organizer}
     活動時間: {time}
@@ -167,7 +167,7 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     #response = model.generate_content(prompt)
     #return response.text
     response = model.generate_content(prompt)
-    poster_url = response.image_url
-    event_poster = poster_url
+    #poster_url = response.image_url
+    #event_poster = poster_url
     return result.image, response.text
 

@@ -127,6 +127,7 @@ def replace_location_with_abbrev(input_text):
 def generate_promotion_data(organizer, time, location, event_name, description, fee):
     #model = genai.GenerativeModel("gemini-1.5-flash")
     model = genai.GenerativeModel("gemini-1.5-pro")
+    imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
     prompt = f"""
     使用以下資料生中文及英文宣傳文宣，先是中文，後面才是英文：
     要包含以下內容: 
@@ -144,12 +145,29 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     希望能是符合活動特質的海報，像是啦啦隊海報要有活力，咖啡社海報要溫馨。
     生成後輸出海報及文案。
     """
+    result = imagen.generate_images(
+    prompt="""使用以下資料生中文及英文宣傳海報，先是中文，後面才是英文：
+    要包含以下內容: 
+    主辦單位: {organizer}
+    活動時間: {time}
+    活動地點: {location}
+    活動名稱: {event_name}
+    活動內容: {description}
+    費用: {fee}
+    如果費用為零，請強調活動完全免費，
+    海報的部分，
+    希望能是符合活動特質的海報，像是啦啦隊海報要有活力，咖啡社海報要溫馨。
+    生成後輸出海報及文案。""",
+    number_of_images=2,
+    safety_filter_level="block_only_high",
+    person_generation="allow_adult",
+    aspect_ratio="3:4",
+    negative_prompt="Outside",
+)
     #response = model.generate_content(prompt)
     #return response.text
     response = model.generate_content(prompt)
-    logger.info("Response type: %s", type(response))
-    logger.info("Response attributes: %s", dir(response))
     poster_url = response.image_url
     event_poster = poster_url
-    return event_poster, response.text
+    return result.image, response.text
 

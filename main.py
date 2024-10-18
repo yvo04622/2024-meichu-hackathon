@@ -133,7 +133,7 @@ def handle_text_message(event):
 
             reply_msg = "開始文宣，請稍等..."
 
-            event_text = generate_promotion_data(organizer, time, location, event_name, description)
+            event_text = generate_promotion_data(organizer, time, location, event_name, description, fee)
 
             reply_msg = f"文宣內容: {event_text}"
 

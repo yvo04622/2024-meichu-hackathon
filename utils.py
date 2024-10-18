@@ -124,20 +124,21 @@ def replace_location_with_abbrev(input_text):
     
     return input_text
 
-def generate_poster_and_promotion_data(organizer, time, location, event_name, description):
-    # change to canva API
-    model = GenerativeModel("gemini-1.5-pro")
+def generate_promotion_data(organizer, time, location, event_name, description, fee):
+    model = genai.GenerativeModel("gemini-1.5-flash")
     prompt = f"""
-    使用以下資料生成活動海報及宣傳文宣：
+    使用以下資料生中文及英文宣傳文宣，先是中文，後面才是英文：
+    要包含以下內容
     主辦單位: {organizer}
     活動時間: {time}
     活動地點: {location}
     活動名稱: {event_name}
     活動內容: {description}
-    生成後輸出為圖片和文案。
+    費用: {fee}
+    以及一個有趣的笑話，才能吸引大家參加
+    生成後輸出文案。
     """
     response = model.generate_content(prompt)
-    poster_url = response['image_url']
-    event_poster = poster_url
-    return event_poster, response.text
+    return response.text
+     
 

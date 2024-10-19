@@ -165,7 +165,7 @@ def handle_text_message(event):
                 )
             )
     elif text == "\\slogan":
-        reply_msg = "請依次輸入：\\poster 主辦單位 時間 地點 活動名稱 活動內容 費用"
+        reply_msg = "請依序輸入並以空白鍵隔開：主辦單位 時間 地點 活動名稱 活動內容 費用"
         fdb.put_async(user_state_path, None, {"step": "awaiting_keyword"})
         with ApiClient(configuration) as api_client:
             line_bot_api = MessagingApi(api_client)
@@ -220,7 +220,7 @@ def handle_text_message(event):
     elif user_state["step"] == "awaiting_keyword":
         # 收集到關鍵字，要求輸入主題1
         fdb.delete(user_state_path, None)
-        reply_msg = "開始文宣，請稍等..."
+        reply_msg = "開始生成文宣，請稍等..."
         parts = text.split(" ", 5)
         organizer, time, location, event_name, description, fee = parts
         fdb.put_async(user_chat_path, "organizer", organizer)

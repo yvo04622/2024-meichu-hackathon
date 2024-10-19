@@ -111,13 +111,17 @@ def push_quick_message(event):
         messages = []
     else:
         messages = conversation_data
-    message = TextSendMessage(
-        text="文字訊息",
-        quick_reply=QuickReply(items=[QuickReplyButton(action=MessageAction(label="生成文案", text="\\slogan"))]),
-    )
+
+    quick_reply = (QuickReply(items=[QuickReplyButton(action=MessageAction(label="生成文案", text="\\slogan"))]),)
+
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message(ReplyMessageRequest(event.reply_token, message))
+        line_bot_api.reply_message(
+            ReplyMessageRequest(
+                reply_token=event.reply_token,
+                messages=[TextMessage(text=quick_reply)],
+            )
+        )
 
     return "OK"
 

@@ -112,6 +112,7 @@ async def handle_callback(request: Request):
 
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_text_message(event):
+    global CS_begin, CS_audio, CS_pdf
     # loging part
     logging.info(event)
     text = event.message.text

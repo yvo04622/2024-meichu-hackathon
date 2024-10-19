@@ -158,8 +158,8 @@ def speech_translate_summary(audio_file=None, pdf_file=None):
     print("audio2text...")
     conv_json, text, language = audio2text(audio_file)
 
-    output_file = None
-    translated_text = translate(text, output_file)
+    print("done. translate...")
+    translated_text = translate(text, language)
 
     model = genai.GenerativeModel("gemini-1.5-flash")
     if pdf_file is None:

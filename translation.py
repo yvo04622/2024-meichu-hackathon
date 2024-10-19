@@ -21,7 +21,9 @@ def translate_text_from_vertexAI(text, project_name, model_name="gemini-1.5-flas
     return responses.candidates[0].text
 
 
-def main(text, output_file):
+def main(text, language):
+    if language == "zh":
+        return text
     result = translate_text_from_vertexAI(text, project_name=YOUR_PROJECT_NAME)
     return result
 

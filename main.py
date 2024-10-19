@@ -259,7 +259,7 @@ def handle_text_message(event):
 
 
 @handler.add(MessageEvent, message=ImageMessageContent)
-def handle_note_img_message(event):
+def handle_img_message(event):
     image_content = b""
     with ApiClient(configuration) as api_client:
         line_bot_blob_api = MessagingApiBlob(api_client)
@@ -293,8 +293,8 @@ def handle_note_img_message(event):
 
 
 @handler.add(MessageEvent, message=AudioMessageContent)
-def handle_note_audio_message(event):
-    global CS_begin, CS_audio
+def handle_audio_message(event):
+    global CS_begin, CS_audio, CS_pdf
     with ApiClient(configuration) as api_client:
         line_bot_blob_api = MessagingApiBlob(api_client)
         audio_content = line_bot_blob_api.get_message_content(event.message.id)

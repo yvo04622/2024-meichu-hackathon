@@ -1,13 +1,13 @@
+import json
 import logging
 import os
 import re
-import requests
-import json
-
-from PIL import Image
-from io import BytesIO
 import urllib
+from io import BytesIO
+
 import google.generativeai as genai
+import requests
+from PIL import Image
 
 campus_json = json.load(open("campus.json"))
 
@@ -39,10 +39,7 @@ def create_gcal_url(
     return event_url + "&openExternalBrowser=1"
 
 
-def check_image(
-    url=None,
-    b_image=None
-):
+def check_image(url=None, b_image=None):
     genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
     if url is not None:
         response = requests.get(url)
@@ -82,7 +79,6 @@ def check_image(
     return response.text
 
 
-
 def shorten_url_by_reurl_api(short_url):
     url = "https://api.reurl.cc/shorten"
 
@@ -103,32 +99,37 @@ def shorten_url_by_reurl_api(short_url):
     logger.info(response.json())
     return response.json()["short_url"]
 
+
 import re
+
 
 def replace_location_with_abbrev(input_text):
     for campus, buildings in campus_json.items():
         for building_code, building_info in buildings.items():
             tw_abbrev = building_info.get("tw-abbrev")
             tw_name = building_info.get("tw")
-        
+
             if tw_abbrev and tw_abbrev in input_text:
                 input_text = input_text.replace(tw_abbrev, building_code)
-            
+
             if tw_name and input_text.startswith(tw_name):
                 input_text = input_text.replace(tw_name, building_code)
-            
+
             if tw_name and re.search(f"{tw_name}.*", input_text):
                 input_text = re.sub(f"{tw_name}", building_code, input_text)
 
-            input_text = re.sub(r'[\u4e00-\u9fff]+', lambda match: building_code, input_text)
-    
+            input_text = re.sub(
+                r"[\u4e00-\u9fff]+", lambda match: building_code, input_text
+            )
+
     return input_text
+
 
 def generate_promotion_data(organizer, time, location, event_name, description, fee):
     model = genai.GenerativeModel("gemini-1.5-flash")
-    #model = genai.GenerativeModel("gemini-1.5-pro")
-    #imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
-    
+    # model = genai.GenerativeModel("gemini-1.5-pro")
+    # imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
+
     prompt = f"""
     使用以下資料生中文及英文宣傳文宣，先是中文，後面才是英文：
     一定要包含以下內容: 
@@ -147,5 +148,27 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
 
     response = model.generate_content(prompt)
     return response.text
-   
 
+
+def speech_translate_summary(audio_file=None, pdf_file=None):
+    from whisperx_audio2text import main as audio2text
+
+    from translation import main as translate
+
+    print("audio2text...")
+    conv_json, text, language = audio2text(audio_file)
+
+    output_file = None
+    translated_text = translate(text, output_file)
+
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    if pdf_file is None:
+        prompt = f"根據以下課程逐字稿。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。\n課程逐字稿：\n{translated_text}"
+        response = model.generate_content([prompt])
+    else:
+        prompt = f"根據以下課程逐字稿及簡報內容。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。\n課程逐字稿：\n{translated_text}"
+        response = model.generate_content([prompt, pdf_file])
+
+    logger.info(response.text)
+
+    return response.text

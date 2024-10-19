@@ -21,10 +21,11 @@ from linebot.v3.messaging import (
     MessagingApiBlob,
 )
 from linebot.v3.exceptions import InvalidSignatureError
-from linebot.v3.webhooks import MessageEvent, TextMessageContent, ImageMessageContent
+from linebot.v3.webhooks import MessageEvent, TextMessageContent, ImageMessageContent, AccountLinkEvent
 
 import uvicorn
 from fastapi.responses import RedirectResponse
+from linebot.models import QuickReply, TextSendMessage, QuickReplyButton, MessageAction
 
 logging.basicConfig(level=os.getenv("LOG", "WARNING"))
 logger = logging.getLogger(__file__)
@@ -93,8 +94,10 @@ async def handle_callback(request: Request):
     except InvalidSignatureError:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
-@handler.add(MessageEvent, message=TextMessageContent)
-def handle_text_message(event):
+
+@handler.add(AccountLinkEvent, reply_message=TextMessageContent)
+def push_quick_message(event):
+    # loging part
     logging.info(event)
     text = event.message.text
     user_id = event.source.user_id
@@ -104,7 +107,34 @@ def handle_text_message(event):
     user_state_path = f"state/{user_id}"
 
     conversation_data = fdb.get(user_chat_path, None)
-    #user_state = fdb.get(user_state_path, None)
+    if conversation_data is None:
+        messages = []
+    else:
+        messages = conversation_data
+    message = TextSendMessage(
+        text="文字訊息",
+        quick_reply=QuickReply(items=[QuickReplyButton(action=MessageAction(label="生成文案", text="\\slogan"))]),
+    )
+    with ApiClient(configuration) as api_client:
+        line_bot_api = MessagingApi(api_client)
+        line_bot_api.reply_message(ReplyMessageRequest(event.reply_token, message))
+
+    return "OK"
+
+
+@handler.add(MessageEvent, message=TextMessageContent)
+def handle_text_message(event):
+    # loging part
+    logging.info(event)
+    text = event.message.text
+    user_id = event.source.user_id
+
+    fdb = firebase.FirebaseApplication(firebase_url, None)
+    user_chat_path = f"chat/{user_id}"
+    user_state_path = f"state/{user_id}"
+
+    conversation_data = fdb.get(user_chat_path, None)
+    # user_state = fdb.get(user_state_path, None)
 
     if conversation_data is None:
         messages = []
@@ -116,24 +146,24 @@ def handle_text_message(event):
         fdb.delete(user_state_path, None)
         reply_msg = "已清空對話紀錄"
     elif text.startswith("\\slogan"):
-        parts = text.split(' ', 6) 
+        parts = text.split(" ", 6)
 
         if len(parts) < 7:
             reply_msg = "輸入不完整，請依次輸入：\\poster 主辦單位 時間 地點 活動名稱 活動內容 費用"
         else:
             _, organizer, time, location, event_name, description, fee = parts
-            fdb.put_async(user_chat_path, 'organizer', organizer)
-            fdb.put_async(user_chat_path, 'time', time)
-            fdb.put_async(user_chat_path, 'location', location)
-            fdb.put_async(user_chat_path, 'event_name', event_name)
-            fdb.put_async(user_chat_path, 'description', description)
-            fdb.put_async(user_chat_path, 'fee', fee)
+            fdb.put_async(user_chat_path, "organizer", organizer)
+            fdb.put_async(user_chat_path, "time", time)
+            fdb.put_async(user_chat_path, "location", location)
+            fdb.put_async(user_chat_path, "event_name", event_name)
+            fdb.put_async(user_chat_path, "description", description)
+            fdb.put_async(user_chat_path, "fee", fee)
 
             location = replace_location_with_abbrev(location)
 
             reply_msg = "開始文宣，請稍等..."
 
-            event_text =  generate_promotion_data(organizer, time, location, event_name, description, fee)
+            event_text = generate_promotion_data(organizer, time, location, event_name, description, fee)
 
             reply_msg = f"文宣內容: {event_text}"
 
@@ -150,6 +180,7 @@ def handle_text_message(event):
         )
 
     return "OK"
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", default=8080))

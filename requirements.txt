@@ -6,3 +6,4 @@ pillow
 requests
 Pillow
 google.generativeai
+git+https://github.com/ozgur/python-firebase

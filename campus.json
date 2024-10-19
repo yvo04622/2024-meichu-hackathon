@@ -1,0 +1,126 @@
+{
+    "新竹光復校區 [GF] / Guang-Fu Campus [GF]": {
+        "EA": {
+            "tw": "工程一館",
+            "English": "Engineering Building 1", 
+            "tw-abbrev": "工一"
+        },
+        "EB": {
+            "tw": "工程二館",
+            "English": "Engineering Building 2", 
+            "tw-abbrev": "工二"
+        },
+        "EC": {
+            "tw": "工程三館",
+            "English": "Engineering Building 3", 
+            "tw-abbrev": "工三"
+        },
+        "ED": {
+            "tw": "工程四館",
+            "English": "Engineering Building 4", 
+            "tw-abbrev": "工四"
+        },
+        "EE": {
+            "tw": "工程五館",
+            "English": "Engineering Building 5", 
+            "tw-abbrev": "工五"
+        },
+        "EF": {
+            "tw": "工程六館",
+            "English": "Engineering Building 6", 
+            "tw-abbrev": "工六"
+        },
+        "M": {
+            "tw": "管理一館",
+            "English": "Management Building 1", 
+            "tw-abbrev": "管一"
+        },
+        "MB": {
+            "tw": "管理二館",
+            "English": "Management Building 2", 
+            "tw-abbrev": "管二"
+        },
+        "SA": {
+            "tw": "科學一館",
+            "English": "Science Building 1", 
+            "tw-abbrev": "科一"
+        },
+        "SB": {
+            "tw": "科學二館",
+            "English": "Science Building 2", 
+            "tw-abbrev": "科二"
+        },
+        "SC": {
+            "tw": "科學三館",
+            "English": "Science Building 3", 
+            "tw-abbrev": "科三"
+        },
+        "AC": {
+            "tw": "學生活動中心",
+            "English": "Students Activity Center", 
+            "tw-abbrev": "活中"
+        },
+        "A": {
+            "tw": "綜合一館",
+            "English": "Assembly Building 1", 
+            "tw-abbrev": "綜一"
+        },
+        "AB": {
+            "tw": "綜合一館地下室",
+            "English": "Assembly Building 1 Basement", 
+            "tw-abbrev": "綜一地B1"
+        },
+        "HA": {
+            "tw": "人社一館",
+            "English": "Humanities and Social Sciences Building 1", 
+            "tw-abbrev": "人一"
+        },
+        "HB": {
+            "tw": "人社二館",
+            "English": "Humanities and Social Sciences Building 2", 
+            "tw-abbrev": "人二"
+        },
+        "HC": {
+            "tw": "人社三館",
+            "English": "Humanities and Social Sciences Building 3", 
+            "tw-abbrev": "人三"
+        },
+        "CY": {
+            "tw": "交映樓",
+            "English": "CPT Building"
+        },
+        "EO": {
+            "tw": "田家炳光電大樓",
+            "English": "Electro-Optical (Tin Ka Ping Photonic Building)", 
+            "tw-abbrev": "田家炳"
+        },
+        "EV": {
+            "tw": "環工館",
+            "English": "Environmental Engineering Building"
+        },
+        "CS": {
+            "tw": "資訊技術服務中心",
+            "English": "Information Technology Service Center", 
+            "tw-abbrev": "計中"
+        },
+        "ES": {
+            "tw": "電子資訊中心",
+            "English": "Microelectronics and Information System Research Center", 
+            "tw-abbrev": "電資大樓"
+        },
+        "CE": {
+            "tw": "土木結構實驗室",
+            "English": "Civil Engineering Lab"
+        },
+        "AD": {
+            "tw": "大禮堂",
+            "English": "Auditorium"
+        },
+        "Lib": {
+            "tw": "浩然圖書資訊中心",
+            "English": "Library and Information Center", 
+            "tw-abbrev": "圖書館"
+        }
+    }
+}
+

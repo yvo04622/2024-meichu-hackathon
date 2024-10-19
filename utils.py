@@ -155,13 +155,16 @@ def speech_translate_summary(audio_file=None, bimg=None):
 
     from translation import main as translate
 
-    print("audio2text...")
-    conv_json, text, language = audio2text(audio_file)
-
-    print("done. translate...")
-    translated_text = translate(text, language)
-
     image = None
+    translated_text = None
+
+    if audio_file is not None:
+        print("audio2text...")
+        conv_json, text, language = audio2text(audio_file)
+
+        print("done. translate...")
+        translated_text = translate(text, language)
+
     if bimg is not None:
         image = Image.open(BytesIO(bimg))
 
@@ -169,7 +172,7 @@ def speech_translate_summary(audio_file=None, bimg=None):
     if image is None:
         prompt = f"根據以下課程逐字稿。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。\n課程逐字稿：\n{translated_text}"
         response = model.generate_content([prompt])
-    elif audio_file is None:
+    elif translated_text is None:
         prompt = f"根據課程的相關圖片。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。"
         response = model.generate_content([prompt, image])
     else:

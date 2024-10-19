@@ -156,31 +156,29 @@ def handle_text_message(event):
                 )
             )
 
-    elif user_state:
-        # 根據用戶的當前狀態進行交互
-        if user_state["step"] == "awaiting_keyword":
-            # 收集到關鍵字，要求輸入主題1
-            fdb.delete(user_state_path, None)
-            reply_msg = "開始文宣，請稍等..."
-            parts = text.split(" ", 5)
-            _, organizer, time, location, event_name, description, fee = parts
-            fdb.put_async(user_chat_path, "organizer", organizer)
-            fdb.put_async(user_chat_path, "time", time)
-            fdb.put_async(user_chat_path, "location", location)
-            fdb.put_async(user_chat_path, "event_name", event_name)
-            fdb.put_async(user_chat_path, "description", description)
-            fdb.put_async(user_chat_path, "fee", fee)
-            event_text = generate_promotion_data(organizer, time, location, event_name, description, fee)
+    elif user_state["step"] == "awaiting_keyword":
+        # 收集到關鍵字，要求輸入主題1
+        reply_msg = "開始文宣，請稍等..."
+        parts = text.split(" ", 5)
+        organizer, time, location, event_name, description, fee = parts
+        fdb.put_async(user_chat_path, "organizer", organizer)
+        fdb.put_async(user_chat_path, "time", time)
+        fdb.put_async(user_chat_path, "location", location)
+        fdb.put_async(user_chat_path, "event_name", event_name)
+        fdb.put_async(user_chat_path, "description", description)
+        fdb.put_async(user_chat_path, "fee", fee)
+        event_text = generate_promotion_data(organizer, time, location, event_name, description, fee)
+        fdb.delete(user_state_path, None)
 
-            reply_msg = f"文宣內容: {event_text}"
-            with ApiClient(configuration) as api_client:
-                line_bot_api = MessagingApi(api_client)
-                line_bot_api.reply_message(
-                    ReplyMessageRequest(
-                        reply_token=event.reply_token,
-                        messages=[TextMessage(text=reply_msg)],
-                    )
+        reply_msg = f"文宣內容: {event_text}"
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[TextMessage(text=reply_msg)],
                 )
+            )
 
     else:
         reply_msg = "請輸入有效命令，例如： 主辦單位 時間 地點 活動名稱 活動內容 費用"

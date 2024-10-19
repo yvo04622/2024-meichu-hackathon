@@ -19,13 +19,15 @@ from linebot.v3.messaging import (
     ApiClient,
     MessagingApi,
     MessagingApiBlob,
+    QuickReply,
+    QuickReplyItem,
+    MessageAction,
 )
 from linebot.v3.exceptions import InvalidSignatureError
 from linebot.v3.webhooks import MessageEvent, TextMessageContent, ImageMessageContent, AccountLinkEvent
 
 import uvicorn
 from fastapi.responses import RedirectResponse
-from linebot.models import QuickReply, TextSendMessage, QuickReplyButton, MessageAction
 
 logging.basicConfig(level=os.getenv("LOG", "WARNING"))
 logger = logging.getLogger(__file__)
@@ -112,14 +114,19 @@ def push_quick_message(event):
     else:
         messages = conversation_data
 
-    quick_reply = (QuickReply(items=[QuickReplyButton(action=MessageAction(label="生成文案", text="\\slogan"))]),)
-
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
         line_bot_api.reply_message(
             ReplyMessageRequest(
                 reply_token=event.reply_token,
-                messages=[TextMessage(text=quick_reply)],
+                messages=[
+                    TextMessage(
+                        text="Quick reply",
+                        quick_reply=QuickReply(
+                            items=[QuickReplyItem(action=MessageAction(label="生成文案", text="\\slogan"))]
+                        ),
+                    )
+                ],
             )
         )
 

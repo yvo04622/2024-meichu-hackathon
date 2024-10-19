@@ -131,7 +131,7 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     # imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
 
     prompt = f"""
-    使用以下資料生中文及英文宣傳文宣，先是中文，後面才是英文：
+    使用以下資料生成繁體中文及英文宣傳文宣，先是中文，後面才是英文：
     一定要包含以下內容: 
     主辦單位: {organizer}
     活動時間: {time}
@@ -143,7 +143,7 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     如果費用為零，請強調活動完全免費，
     強調大家可以學到或體驗到什麼東西，
     以及一個相關的有趣的笑話，才能吸引大家參加，
-    生成後輸出文案。
+    生成後輸出文案，請不要用 markdown 語法。
     """
 
     response = model.generate_content(prompt)

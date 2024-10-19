@@ -23,9 +23,9 @@ def m4a_to_mp3(m4a_file):
 
 
 def main(audio_file):
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_audio_file:
-        temp_audio_file.write(audio_file)
-        audio_file = temp_audio_file.name
+    # with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_audio_file:
+    #     temp_audio_file.write(audio_file)
+    #     audio_file = temp_audio_file.name
 
     model = load_model("base", device, compute_type=compute_type)
     segments, info = model.transcribe(audio_file, beam_size=5)

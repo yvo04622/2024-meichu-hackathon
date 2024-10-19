@@ -97,42 +97,6 @@ async def handle_callback(request: Request):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
 
-@handler.add(AccountLinkEvent, reply_message=TextMessageContent)
-def push_quick_message(event):
-    # loging part
-    logging.info(event)
-    text = event.message.text
-    user_id = event.source.user_id
-
-    fdb = firebase.FirebaseApplication(firebase_url, None)
-    user_chat_path = f"chat/{user_id}"
-    user_state_path = f"state/{user_id}"
-
-    conversation_data = fdb.get(user_chat_path, None)
-    if conversation_data is None:
-        messages = []
-    else:
-        messages = conversation_data
-
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[
-                    TextMessage(
-                        text="Quick reply",
-                        quick_reply=QuickReply(
-                            items=[QuickReplyItem(action=MessageAction(label="生成文案", text="\\slogan"))]
-                        ),
-                    )
-                ],
-            )
-        )
-
-    return "OK"
-
-
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_text_message(event):
     # loging part
@@ -156,6 +120,30 @@ def handle_text_message(event):
         fdb.delete(user_chat_path, None)
         fdb.delete(user_state_path, None)
         reply_msg = "已清空對話紀錄"
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[TextMessage(text=reply_msg)],
+                )
+            )
+    elif text == "選項":
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[
+                        TextMessage(
+                            text="Quick reply",
+                            quick_reply=QuickReply(
+                                items=[QuickReplyItem(action=MessageAction(label="生成文案", text="\\slogan"))]
+                            ),
+                        )
+                    ],
+                )
+            )
     elif text.startswith("\\slogan"):
         parts = text.split(" ", 6)
 
@@ -177,18 +165,26 @@ def handle_text_message(event):
             event_text = generate_promotion_data(organizer, time, location, event_name, description, fee)
 
             reply_msg = f"文宣內容: {event_text}"
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[TextMessage(text=reply_msg)],
+                )
+            )
 
     else:
         reply_msg = "請輸入有效命令，例如：\\poster 主辦單位 時間 地點 活動名稱 活動內容 費用"
 
-    with ApiClient(configuration) as api_client:
-        line_bot_api = MessagingApi(api_client)
-        line_bot_api.reply_message(
-            ReplyMessageRequest(
-                reply_token=event.reply_token,
-                messages=[TextMessage(text=reply_msg)],
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[TextMessage(text=reply_msg)],
+                )
             )
-        )
 
     return "OK"
 

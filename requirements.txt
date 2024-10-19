@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+line-bot-sdk
+grpcio
+pillow
+requests
+Pillow
+google.generativeai
+git+https://github.com/ozgur/python-firebase

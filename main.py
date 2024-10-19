@@ -133,9 +133,9 @@ def handle_text_message(event):
 
             reply_msg = "開始文宣，請稍等..."
 
-            event_poster, event_text =  generate_promotion_data(organizer, time, location, event_name, description, fee)
+            event_text =  generate_promotion_data(organizer, time, location, event_name, description, fee)
 
-            reply_msg = f"活動海報: {event_poster}\n文宣內容: {event_text}"
+            reply_msg = f"文宣內容: {event_text}"
 
     else:
         reply_msg = "請輸入有效命令，例如：\\poster 主辦單位 時間 地點 活動名稱 活動內容 費用"

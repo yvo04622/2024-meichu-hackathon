@@ -150,7 +150,7 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     return response.text
 
 
-def speech_translate_summary(audio_file=None, pdf_file=None):
+def speech_translate_summary(audio_file=None, bimg=None):
     from whisperx_audio2text import main as audio2text
 
     from translation import main as translate
@@ -161,13 +161,17 @@ def speech_translate_summary(audio_file=None, pdf_file=None):
     print("done. translate...")
     translated_text = translate(text, language)
 
+    image = None
+    if bimg is not None:
+        image = Image.open(BytesIO(bimg))
+
     model = genai.GenerativeModel("gemini-1.5-flash")
-    if pdf_file is None:
+    if image is None:
         prompt = f"根據以下課程逐字稿。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。\n課程逐字稿：\n{translated_text}"
         response = model.generate_content([prompt])
     else:
-        prompt = f"根據以下課程逐字稿及簡報內容。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。\n課程逐字稿：\n{translated_text}"
-        response = model.generate_content([prompt, pdf_file])
+        prompt = f"根據以下課程逐字稿及相關圖片。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。\n課程逐字稿：\n{translated_text}"
+        response = model.generate_content([prompt, image])
 
     logger.info(response.text)
 

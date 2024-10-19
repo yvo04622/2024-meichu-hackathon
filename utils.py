@@ -125,8 +125,8 @@ def replace_location_with_abbrev(input_text):
     return input_text
 
 def generate_promotion_data(organizer, time, location, event_name, description, fee):
-    #model = genai.GenerativeModel("gemini-1.5-flash")
-    model = genai.GenerativeModel("gemini-1.5-pro")
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    #model = genai.GenerativeModel("gemini-1.5-pro")
     #imagen = genai.ImageGenerationModel("imagen-3.0-generate-001")
     
     prompt = f"""
@@ -142,16 +142,10 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     如果費用為零，請強調活動完全免費，
     強調大家可以學到或體驗到什麼東西，
     以及一個相關的有趣的笑話，才能吸引大家參加，
-    海報的部分，
-    希望能是符合活動特質的海報，像是啦啦隊海報要有活力，咖啡社海報要溫馨。
-    生成後輸出海報及文案。
+    生成後輸出文案。
     """
-    response = model.generate_content("生成海灘的圖片")
-    
-    #response = model.generate_content(prompt)
-    #return response.text
-    #response = model.generate_content(prompt)
-    #poster_url = response.image_url
-    #event_poster = poster_url
+
+    response = model.generate_content(prompt)
     return response.text
+   
 

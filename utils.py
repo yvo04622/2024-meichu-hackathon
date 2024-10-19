@@ -131,11 +131,10 @@ def generate_promotion_data(organizer, time, location, event_name, description, 
     
     prompt = f"""
     使用以下資料生中文及英文宣傳文宣，先是中文，後面才是英文：
-    要包含以下內容: 
+    一定要包含以下內容: 
     主辦單位: {organizer}
     活動時間: {time}
-    活動地點: {location}
-    英文的活動地點則是: {replace_location_with_abbrev(location)}
+    中文文宣活動地點: {location}而英文的活動地點則是: {replace_location_with_abbrev(location)}
     活動名稱: {event_name}
     活動內容: {description}
     費用: {fee}

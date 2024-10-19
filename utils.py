@@ -169,6 +169,9 @@ def speech_translate_summary(audio_file=None, bimg=None):
     if image is None:
         prompt = f"根據以下課程逐字稿。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。\n課程逐字稿：\n{translated_text}"
         response = model.generate_content([prompt])
+    elif audio_file is None:
+        prompt = f"根據課程的相關圖片。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。"
+        response = model.generate_content([prompt, image])
     else:
         prompt = f"根據以下課程逐字稿及相關圖片。撰寫一份本課程的重點筆記。\n重點筆記應以markdown格式撰寫，且不可超過20行。\n課程逐字稿：\n{translated_text}"
         response = model.generate_content([prompt, image])

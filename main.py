@@ -187,7 +187,12 @@ def handle_text_message(event):
                         TextMessage(
                             text="Quick reply",
                             quick_reply=QuickReply(
-                                items=[QuickReplyItem(action=MessageAction(label="生成文案", text="\\slogan"))]
+                                items=[
+                                    QuickReplyItem(action=MessageAction(label="語音轉表單", text="\\form")), 
+                                    QuickReplyItem(action=MessageAction(label="簡報轉摘要", text="\\pdfnote")), 
+                                    QuickReplyItem(action=MessageAction(label="語音轉摘要", text="\\audnote")), 
+                                    QuickReplyItem(action=MessageAction(label="生成文案", text="\\slogan")),
+                                ]
                             ),
                         )
                     ],

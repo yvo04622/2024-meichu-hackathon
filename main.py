@@ -401,8 +401,20 @@ def handle_audio_message(event):
         with ApiClient(configuration) as api_client:
             line_bot_api = MessagingApi(api_client)
             line_bot_api.push_message(PushMessageRequest(to=user_id, messages=[TextMessage(text=reply_msg)]))
+        form_begin = False
 
-    if CS_begin:
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[TextMessage(text=reply_msg)],
+                )
+            )
+
+        return "OK"
+
+    else:
         with ApiClient(configuration) as api_client:
             line_bot_blob_api = MessagingApiBlob(api_client)
             audio_content = line_bot_blob_api.get_message_content(event.message.id)

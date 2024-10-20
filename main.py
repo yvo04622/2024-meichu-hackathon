@@ -7,6 +7,8 @@ from utils import (
     generate_promotion_data,
     replace_location_with_abbrev,
     speech_translate_summary,
+    make_form,
+    shorten_url_by_reurl_api,
 )
 
 if os.getenv("API_ENV") != "production":
@@ -31,6 +33,7 @@ from linebot.v3.messaging import (
     QuickReplyItem,
     ReplyMessageRequest,
     TextMessage,
+    PushMessageRequest,
 )
 from linebot.v3.webhooks import (
     AccountLinkEvent,
@@ -39,6 +42,11 @@ from linebot.v3.webhooks import (
     MessageEvent,
     TextMessageContent,
 )
+import requests
+from urllib.parse import urlencode
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request as Req
+from googleapiclient.discovery import build
 
 logging.basicConfig(level=os.getenv("LOG", "WARNING"))
 logger = logging.getLogger(__file__)
@@ -65,13 +73,40 @@ from utils import check_image, create_gcal_url, is_url_valid, shorten_url_by_reu
 
 firebase_url = os.getenv("FIREBASE_URL")
 gemini_key = os.getenv("GEMINI_API_KEY")
+client_id = os.getenv("CLIENT_ID")
+client_secret = os.getenv("CLIENT_SECRET")
+redirect_uri = os.getenv("REDIRECT_URI")
+
+# 設定 OAuth 2.0 參數
+scope = "https://www.googleapis.com/auth/forms.body https://www.googleapis.com/auth/drive"
+auth_url = f"https://accounts.google.com/o/oauth2/auth?{urlencode({'client_id': client_id, 'redirect_uri': redirect_uri, 'scope': scope, 'response_type': 'code', 'access_type': 'offline', 'prompt': 'consent'})}"
+
 
 CS_begin = False
 CS_audio = None
 CS_pdf = None
+form_begin = False
+authorization_code = None
+access_token = None
+refresh_token = None
 
 # Initialize the Gemini Pro API
 genai.configure(api_key=gemini_key)
+
+
+def exchange_code_for_token(code: str):
+    """交換授權碼換取存取權杖"""
+    token_url = "https://oauth2.googleapis.com/token"
+    payload = {
+        "code": code,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": redirect_uri,
+        "grant_type": "authorization_code",
+    }
+    response = requests.post(token_url, data=payload)
+
+    return response.json()
 
 
 @app.get("/health")
@@ -112,7 +147,7 @@ async def handle_callback(request: Request):
 
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_text_message(event):
-    global CS_begin, CS_audio, CS_pdf
+    global CS_begin, CS_audio, CS_pdf, form_begin, authorization_code, access_token, refresh_token
     # loging part
     logging.info(event)
     text = event.message.text
@@ -152,13 +187,7 @@ def handle_text_message(event):
                         TextMessage(
                             text="Quick reply",
                             quick_reply=QuickReply(
-                                items=[
-                                    QuickReplyItem(
-                                        action=MessageAction(
-                                            label="生成文案", text="\\slogan"
-                                        )
-                                    )
-                                ]
+                                items=[QuickReplyItem(action=MessageAction(label="生成文案", text="\\slogan"))]
                             ),
                         )
                     ],
@@ -199,6 +228,18 @@ def handle_text_message(event):
                     messages=[TextMessage(text=reply_msg)],
                 )
             )
+    elif text == "\\form":
+        form_begin = True
+        reply_msg = "好的，請給我音檔"
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.reply_message(
+                ReplyMessageRequest(
+                    reply_token=event.reply_token,
+                    messages=[TextMessage(text=reply_msg)],
+                )
+            )
+
     elif CS_begin and text == "n":
         if CS_audio is None and CS_pdf is None:
             reply_msg = "想整理社課筆記的話，請先提供錄音檔或圖片！"
@@ -229,9 +270,7 @@ def handle_text_message(event):
         fdb.put_async(user_chat_path, "event_name", event_name)
         fdb.put_async(user_chat_path, "description", description)
         fdb.put_async(user_chat_path, "fee", fee)
-        event_text = generate_promotion_data(
-            organizer, time, location, event_name, description, fee
-        )
+        event_text = generate_promotion_data(organizer, time, location, event_name, description, fee)
 
         reply_msg = f"文宣內容: {event_text}"
         with ApiClient(configuration) as api_client:
@@ -276,31 +315,95 @@ def handle_img_message(event):
         reply_msg = summary
     elif CS_begin:
         CS_pdf = image_content
-        reply_msg = (
-            '已收到圖片，如果有的話，請給我課程的錄音檔！\n如果沒有，請輸入"n"告訴我～'
-        )
+        reply_msg = '已收到圖片，如果有的話，請給我課程的錄音檔！\n如果沒有，請輸入"n"告訴我～'
     else:
         reply_msg = "你想做什麼呢？如果想整理社課筆記，請先點選「上傳圖片」！"
 
     with ApiClient(configuration) as api_client:
         line_bot_api = MessagingApi(api_client)
         line_bot_api.reply_message(
-            ReplyMessageRequest(
-                replyToken=event.reply_token, messages=[TextMessage(text=reply_msg)]
-            )
+            ReplyMessageRequest(replyToken=event.reply_token, messages=[TextMessage(text=reply_msg)])
         )
     return "OK"
 
 
 @handler.add(MessageEvent, message=AudioMessageContent)
 def handle_audio_message(event):
-    global CS_begin, CS_audio, CS_pdf
-    with ApiClient(configuration) as api_client:
-        line_bot_blob_api = MessagingApiBlob(api_client)
-        audio_content = line_bot_blob_api.get_message_content(event.message.id)
-    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_audio_file:
-        temp_audio_file.write(audio_content)
-        audio_content = temp_audio_file.name
+    global CS_begin, CS_audio, CS_pdf, form_begin, access_token, refresh_token
+    if form_begin:
+        user_id = event.source.user_id
+        if not access_token:
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        replyToken=event.reply_token,
+                        messages=[TextMessage(text=f"請點擊以下連結進行授權：{shorten_url_by_reurl_api(auth_url)}")],
+                    )
+                )
+
+            response = requests.get("https://685d-60-251-196-41.ngrok-free.app/get_token")
+            # 檢查是否成功取得授權碼
+            if response.status_code == 200:
+                authorization_code = response.json().get("authorization_code")
+                if not authorization_code:
+                    raise Exception("Authorization code not found in response.")
+            else:
+                raise Exception(f"Failed to get authorization code: {response.text}")
+
+            # 用授權碼交換存取權杖
+            token_data = exchange_code_for_token(authorization_code)
+
+            access_token = token_data.get("access_token")
+            refresh_token = token_data.get("refresh_token")
+
+            if not access_token or not refresh_token:
+                raise ValueError("Access or refresh token missing.")
+
+        creds = Credentials(
+            token=access_token,
+            refresh_token=refresh_token,
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=client_id,
+            client_secret=client_secret,
+            scopes=["https://www.googleapis.com/auth/forms.body", "https://www.googleapis.com/auth/drive"],
+        )
+        try:
+            creds.refresh(Req())
+        except Exception as e:
+            print(f"Failed to refresh token: {e}")
+
+        # 使用憑證初始化 form_service 物件
+        global form_service
+        form_service = build("forms", "v1", credentials=creds, static_discovery=False)
+
+        # 下載語音訊息檔案
+        audio_message_id = event.message.id
+
+        with ApiClient(configuration) as api_client:
+            line_bot_blob_api = MessagingApiBlob(api_client)
+            audio_content = line_bot_blob_api.get_message_content(audio_message_id)
+
+        # 將 M4A 轉成 MP3
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_audio_file:
+            temp_audio_file.write(audio_content)
+            mp3_path = temp_audio_file.name
+
+        # 發送語音檔案給 Gemini API，回傳表單連結
+        form_url = make_form(mp3_path, form_service, access_token)
+        reply_msg = shorten_url_by_reurl_api(form_url)
+
+        with ApiClient(configuration) as api_client:
+            line_bot_api = MessagingApi(api_client)
+            line_bot_api.push_message(PushMessageRequest(to=user_id, messages=[TextMessage(text=reply_msg)]))
+
+    if CS_begin:
+        with ApiClient(configuration) as api_client:
+            line_bot_blob_api = MessagingApiBlob(api_client)
+            audio_content = line_bot_blob_api.get_message_content(event.message.id)
+        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as temp_audio_file:
+            temp_audio_file.write(audio_content)
+            audio_content = temp_audio_file.name
 
     if CS_begin and CS_pdf is not None:
         CS_audio = audio_content

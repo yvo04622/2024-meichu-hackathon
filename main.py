@@ -89,6 +89,8 @@ form_begin = False
 authorization_code = None
 access_token = None
 refresh_token = None
+task_processing = 0  # [1: text, 2: audnote, 3: pdfnote, 4:form]
+task_type = {0: None, 1: "文案發想", 2: "語音筆記", 3: "簡報筆記", 4: "表單生成"}
 
 # Initialize the Gemini Pro API
 genai.configure(api_key=gemini_key)
@@ -147,7 +149,7 @@ async def handle_callback(request: Request):
 
 @handler.add(MessageEvent, message=TextMessageContent)
 def handle_text_message(event):
-    global CS_begin, CS_audio, CS_pdf, form_begin, authorization_code, access_token, refresh_token
+    global CS_begin, CS_audio, CS_pdf, form_begin, authorization_code, access_token, refresh_token, task_processing, task_type
     # loging part
     logging.info(event)
     text = event.message.text
@@ -194,51 +196,99 @@ def handle_text_message(event):
                 )
             )
     elif text == "\\slogan":
-        reply_msg = "請依序輸入並以空白鍵隔開：主辦單位 時間 地點 活動名稱 活動內容 費用"
-        fdb.put_async(user_state_path, None, {"step": "awaiting_keyword"})
-        with ApiClient(configuration) as api_client:
-            line_bot_api = MessagingApi(api_client)
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text=reply_msg)],
+        if task_processing == 0:
+            task_processing = 1
+            reply_msg = "請依序輸入並以空白鍵隔開：主辦單位 時間 地點 活動名稱 活動內容 費用"
+            fdb.put_async(user_state_path, None, {"step": "awaiting_keyword"})
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=reply_msg)],
+                    )
                 )
-            )
+        else:
+            reply_msg = f"正在執行{task_type[task_processing]},請執行完畢再輸入"
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=reply_msg)],
+                    )
+                )
     elif text == "\\audnote":
-        CS_begin = True
-        reply_msg = "好的，請給我課程的錄音檔！"
-        # fdb.put_async(user_state_path, None, {"step": "awaiting_audio"})
-        with ApiClient(configuration) as api_client:
-            line_bot_api = MessagingApi(api_client)
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text=reply_msg)],
+        if task_processing == 0:
+            task_processing = 2
+            CS_begin = True
+            reply_msg = "好的，請給我課程的錄音檔！"
+            # fdb.put_async(user_state_path, None, {"step": "awaiting_audio"})
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=reply_msg)],
+                    )
                 )
-            )
+        else:
+            reply_msg = f"正在執行{task_type[task_processing]},請執行完畢再輸入"
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=reply_msg)],
+                    )
+                )
     elif text == "\\pdfnote":
-        CS_begin = True
-        reply_msg = "好的，請給我課程相關的截圖或圖片！"
-        # fdb.put_async(user_state_path, None, {"step": "awaiting_pdf"})
-        with ApiClient(configuration) as api_client:
-            line_bot_api = MessagingApi(api_client)
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text=reply_msg)],
+        if task_processing == 0:
+            task_processing = 3
+            CS_begin = True
+            reply_msg = "好的，請給我課程相關的截圖或圖片！"
+            # fdb.put_async(user_state_path, None, {"step": "awaiting_pdf"})
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=reply_msg)],
+                    )
                 )
-            )
+        else:
+            reply_msg = f"正在執行{task_type[task_processing]},請執行完畢再輸入"
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=reply_msg)],
+                    )
+                )
     elif text == "\\form":
-        form_begin = True
-        reply_msg = "好的，請給我音檔"
-        with ApiClient(configuration) as api_client:
-            line_bot_api = MessagingApi(api_client)
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text=reply_msg)],
+        if task_processing == 0:
+            task_processing = 4
+            form_begin = True
+            reply_msg = "好的，請給我音檔"
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=reply_msg)],
+                    )
                 )
-            )
+        else:
+            reply_msg = f"正在執行{task_type[task_processing]},請執行完畢再輸入"
+            with ApiClient(configuration) as api_client:
+                line_bot_api = MessagingApi(api_client)
+                line_bot_api.reply_message(
+                    ReplyMessageRequest(
+                        reply_token=event.reply_token,
+                        messages=[TextMessage(text=reply_msg)],
+                    )
+                )
 
     elif CS_begin and text == "n":
         if CS_audio is None and CS_pdf is None:
@@ -257,6 +307,7 @@ def handle_text_message(event):
                     messages=[TextMessage(text=reply_msg)],
                 )
             )
+        task_processing = 0
 
     elif user_state["step"] == "awaiting_keyword":
         # 收集到關鍵字，要求輸入主題1
@@ -281,18 +332,19 @@ def handle_text_message(event):
                     messages=[TextMessage(text=reply_msg)],
                 )
             )
+        task_processing = 0
 
-    else:
-        reply_msg = "請輸入有效命令，例如： 主辦單位 時間 地點 活動名稱 活動內容 費用"
+    # else:
+    #     reply_msg = "請輸入有效命令，例如： 主辦單位 時間 地點 活動名稱 活動內容 費用"
 
-        with ApiClient(configuration) as api_client:
-            line_bot_api = MessagingApi(api_client)
-            line_bot_api.reply_message(
-                ReplyMessageRequest(
-                    reply_token=event.reply_token,
-                    messages=[TextMessage(text=reply_msg)],
-                )
-            )
+    #     with ApiClient(configuration) as api_client:
+    #         line_bot_api = MessagingApi(api_client)
+    #         line_bot_api.reply_message(
+    #             ReplyMessageRequest(
+    #                 reply_token=event.reply_token,
+    #                 messages=[TextMessage(text=reply_msg)],
+    #             )
+    #         )
 
     return "OK"
 
@@ -304,7 +356,7 @@ def handle_img_message(event):
         line_bot_blob_api = MessagingApiBlob(api_client)
         image_content = line_bot_blob_api.get_message_content(event.message.id)
 
-    global CS_begin, CS_pdf, CS_audio
+    global CS_begin, CS_pdf, CS_audio, task_processing, task_type
 
     if CS_begin and CS_audio is not None:
         CS_pdf = image_content
@@ -324,12 +376,13 @@ def handle_img_message(event):
         line_bot_api.reply_message(
             ReplyMessageRequest(replyToken=event.reply_token, messages=[TextMessage(text=reply_msg)])
         )
+    task_processing = 0
     return "OK"
 
 
 @handler.add(MessageEvent, message=AudioMessageContent)
 def handle_audio_message(event):
-    global CS_begin, CS_audio, CS_pdf, form_begin, access_token, refresh_token
+    global CS_begin, CS_audio, CS_pdf, form_begin, access_token, refresh_token, task_processing, task_type
     if form_begin:
         user_id = event.source.user_id
         if not access_token:
@@ -426,6 +479,7 @@ def handle_audio_message(event):
                 messages=[TextMessage(text=reply_msg)],
             )
         )
+    task_processing = 0
 
     return "OK"
 
